@@ -12,7 +12,10 @@ import {
   validateAuth,
   validateBody,
 } from '@/common';
+import { AdditionalValidation } from '@/utils';
 
+import { GameService } from '../game/game.service';
+import { GamePaginateQuerySchema } from '../game/schema';
 import { AuthService } from './auth.service';
 import {
   type ILogin,
@@ -80,6 +83,34 @@ export const AuthController = Router()
           StatusCodes.OK,
           'Get user data successfully',
           data,
+        );
+
+        return response.status(result.statusCode).json(result.json());
+      } catch (error) {
+        return next(error);
+      }
+    },
+  )
+  .get(
+    '/me/game',
+    validateAuth({}),
+    async (request: AuthedRequest, response: Response, next: NextFunction) => {
+      try {
+        const query = AdditionalValidation.validate(
+          GamePaginateQuerySchema,
+          request.query,
+        );
+
+        const games = await GameService.getAllGame(
+          query,
+          true,
+          request.user!.user_id,
+        );
+        const result = new SuccessResponse(
+          StatusCodes.OK,
+          'Get all user game (private) successfully',
+          games.data,
+          games.meta,
         );
 
         return response.status(result.statusCode).json(result.json());

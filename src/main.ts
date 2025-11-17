@@ -1,11 +1,19 @@
+/* eslint-disable unicorn/prefer-module */
+import { mkdir } from 'node:fs/promises';
+import path from 'node:path';
+
 import cors from 'cors';
 import dotenv from 'dotenv';
 import express from 'express';
+import { StatusCodes } from 'http-status-codes';
 
 import AppRouter from './api/router';
 import { ErrorHandler } from './common';
 
 dotenv.config({ quiet: true });
+
+const uploadPath = path.join(__dirname, '..', 'uploads');
+mkdir(uploadPath);
 
 const app = express();
 
@@ -23,10 +31,13 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 app.use('/health', (_, response) =>
   response.status(200).json({
-    status: true,
+    success: true,
+    statusCode: StatusCodes.OK,
     message: `🌟 Server is healthy. Current time is ${new Date(Date.now()).toLocaleString('ID-id')}`,
   }),
 );
+
+app.use('/uploads', express.static(uploadPath));
 
 app.use('/api', AppRouter);
 app.use(ErrorHandler);

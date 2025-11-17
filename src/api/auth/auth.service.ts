@@ -66,18 +66,36 @@ export abstract class AuthService {
   }
 
   static async getMe(user_id: string) {
-    const isUserExist = await this.findUser(undefined, user_id);
+    const [isUserExist, gameLiked] = await prisma.$transaction([
+      prisma.users.findUnique({
+        where: { id: user_id },
+        select: {
+          id: true,
+          username: true,
+          email: true,
+          role: true,
+          profile_picture: true,
+          total_game_played: true,
+        },
+      }),
+      prisma.likedGames.aggregate({
+        where: {
+          AND: [{ user_id }, { game: { is_published: true } }],
+        },
+        _count: { id: true },
+      }),
+    ]);
 
     if (!isUserExist)
       throw new ErrorResponse(StatusCodes.NOT_FOUND, 'User not found');
 
     return {
       ...isUserExist,
-      password: undefined,
+      total_game_liked: gameLiked._count.id,
     };
   }
 
-  static async findUser(email?: string, id?: string) {
+  private static async findUser(email?: string, id?: string) {
     return await prisma.users.findUnique({
       where: {
         email,

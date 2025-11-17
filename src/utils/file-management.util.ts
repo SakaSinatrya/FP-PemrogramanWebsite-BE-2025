@@ -7,9 +7,7 @@ export abstract class FileManager {
    * @param {string} file_folder_path lokasi upload file dengan format /uploads/{file_folder_path}/{filename}
    * @param {File} file file yang mau diupload
    */
-  static async upload(file_folder_path: string, file?: File) {
-    if (!file) return;
-
+  static async upload(file_folder_path: string, file: File) {
     let cleaned = path.parse(file.name).name.replaceAll(/[^\w -]/g, '');
     cleaned = cleaned.replaceAll(/\s+/g, '_');
 

@@ -76,9 +76,33 @@ export abstract class UserService {
   }
 
   static async getUserDetail(user_id: string) {
-    const user = await this.findExistUser(user_id);
+    const [isUserExist, gameLiked] = await prisma.$transaction([
+      prisma.users.findUnique({
+        where: { id: user_id },
+        select: {
+          id: true,
+          username: true,
+          email: true,
+          role: true,
+          profile_picture: true,
+          total_game_played: true,
+        },
+      }),
+      prisma.likedGames.aggregate({
+        where: {
+          AND: [{ user_id }, { game: { is_published: true } }],
+        },
+        _count: { id: true },
+      }),
+    ]);
 
-    return user;
+    if (!isUserExist)
+      throw new ErrorResponse(StatusCodes.NOT_FOUND, 'User not found');
+
+    return {
+      ...isUserExist,
+      total_game_liked: gameLiked._count.id,
+    };
   }
 
   static async updateUser(user_id: string, data: IUpdateUser) {
@@ -119,7 +143,7 @@ export abstract class UserService {
     await FileManager.remove(user.profile_picture);
   }
 
-  static async findExistUser(user_id: string) {
+  private static async findExistUser(user_id: string) {
     const user = await prisma.users.findUnique({
       where: { id: user_id },
       omit: {

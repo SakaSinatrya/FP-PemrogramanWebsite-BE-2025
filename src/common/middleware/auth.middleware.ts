@@ -1,10 +1,11 @@
 import { type ROLE } from '@prisma/client';
-import { type NextFunction, type Request, type Response } from 'express';
+import { type NextFunction, type Response } from 'express';
 import { StatusCodes } from 'http-status-codes';
 
 import { JwtUtils } from '@/utils';
 
 import { prisma } from '../config';
+import { type AuthedRequest } from '../interface';
 import { ErrorResponse } from '../response';
 
 export const validateAuth =
@@ -15,7 +16,7 @@ export const validateAuth =
     enable?: boolean;
     allowed_roles?: ROLE[];
   }) =>
-  async (request: Request, response: Response, next: NextFunction) => {
+  async (request: AuthedRequest, _: Response, next: NextFunction) => {
     if (!enable) {
       return next();
     }
@@ -64,7 +65,7 @@ export const validateAuth =
         );
       }
 
-      response.locals.user = {
+      request.user = {
         user_id: userData.id,
         email: userData.email,
         role: userData.role,

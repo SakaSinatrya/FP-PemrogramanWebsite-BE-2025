@@ -5,7 +5,7 @@ import { fileSchema } from '@/common';
 export const UpdateUserSchema = z
   .object({
     username: z.string().min(1).max(100),
-    profile_picture: fileSchema(),
+    profile_picture: fileSchema({}),
   })
   .partial();
 

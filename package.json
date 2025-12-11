@@ -24,12 +24,12 @@
     "migrate:prod": "dotenv -e .env.production -- prisma migrate deploy --schema ./prisma/schema.prisma",
     "migrate:prod:reset": "dotenv -e .env.production -- prisma migrate reset --schema ./prisma/schema.prisma",
     "prepare": "husky",
-    "seed:dev": "bun --env-file=.env ./prisma/seeder/seeder.ts",
+    "seed:dev": "bun --env-file=.env.development ./prisma/seeder/seeder.ts",
     "seed:prod": "dotenv -e .env.production -- bun ./prisma/seeder/seeder.ts",
     "sort:package": "sort-package-json",
     "start:deploy:dev": "dotenv -e .env.development -- ./server",
     "start:deploy:prod": "dotenv -e .env.production -- ./server",
-    "start:dev": "bun --env-file=.env run --watch src/main.ts"
+    "start:dev": "bun --env-file=.env.development run --watch src/main.ts"
   },
   "lint-staged": {
     "package.json": "bun sort:package",

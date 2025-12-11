@@ -158,6 +158,7 @@ export abstract class WhackAMoleService {
       select: {
         game_json: true,
         creator_id: true,
+        thumbnail_image: true,
         game_template: { select: { slug: true } },
       },
     });
@@ -176,6 +177,17 @@ export abstract class WhackAMoleService {
     let thumbnailImagePath: string | undefined;
 
     if (data.thumbnail_image) {
+      // Delete old thumbnail if exists
+      if (game.thumbnail_image) {
+        try {
+          await FileManager.remove(game.thumbnail_image);
+        } catch (error) {
+          // Ignore error if old file doesn't exist
+          console.warn('Failed to delete old thumbnail:', error);
+        }
+      }
+
+      // Upload new thumbnail
       thumbnailImagePath = await FileManager.upload(
         `game/whack-a-mole/${game_id}`,
         data.thumbnail_image as File,

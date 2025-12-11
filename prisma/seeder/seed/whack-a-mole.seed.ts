@@ -13,7 +13,6 @@ export const whackAMoleSeed = async () => {
 
     if (!superAdmin) {
       console.log('⚠️  No super admin found, skipping whack-a-mole seed');
-
       return;
     }
 
@@ -24,7 +23,6 @@ export const whackAMoleSeed = async () => {
 
     if (!whackAMoleTemplate) {
       console.log('⚠️  Whack-a-mole template not found, skipping seed');
-
       return;
     }
 
@@ -57,7 +55,6 @@ export const whackAMoleSeed = async () => {
     console.log('✅ Whack-a-mole game seeded successfully');
   } catch (error) {
     console.log(`❌ Error in whack-a-mole seed. ${error}`);
-
     throw error;
   }
 };

@@ -25,7 +25,6 @@ export abstract class WhackAMoleService {
 
     const gameJson: IWhackAMoleGameData = {
       time_limit: data.time_limit ?? 60,
-      difficulty_level: data.difficulty_level ?? 'medium',
     };
 
     const newGame = await prisma.games.create({
@@ -142,7 +141,6 @@ export abstract class WhackAMoleService {
       description: game.description,
       thumbnail_image: game.thumbnail_image,
       time_limit: gameJson.time_limit ?? 60,
-      difficulty_level: gameJson.difficulty_level ?? 'medium',
       is_published: game.is_published,
     };
   }
@@ -196,8 +194,6 @@ export abstract class WhackAMoleService {
 
     const updatedGameJson: IWhackAMoleGameData = {
       time_limit: data.time_limit ?? currentGameJson.time_limit,
-      difficulty_level:
-        data.difficulty_level ?? currentGameJson.difficulty_level,
     };
 
     const updatedGame = await prisma.games.update({
@@ -206,7 +202,7 @@ export abstract class WhackAMoleService {
         name: data.name,
         description: data.description,
         thumbnail_image: thumbnailImagePath,
-        is_published: data.is_publish,
+        is_published: data.is_published,
         game_json: updatedGameJson as unknown as Prisma.InputJsonValue,
       },
       select: {
@@ -222,6 +218,7 @@ export abstract class WhackAMoleService {
       where: { id: game_id },
       select: {
         creator_id: true,
+        thumbnail_image: true,
         game_template: { select: { slug: true } },
       },
     });
@@ -235,11 +232,26 @@ export abstract class WhackAMoleService {
         'User cannot delete this game',
       );
 
+    // Delete thumbnail file first before deleting database record
+    if (game.thumbnail_image) {
+      try {
+        await FileManager.remove(game.thumbnail_image);
+      } catch (error) {
+        console.warn('Failed to delete thumbnail file:', error);
+      }
+    }
+
+    // Delete the entire game folder
+    try {
+      await FileManager.remove(`game/whack-a-mole/${game_id}`);
+    } catch (error) {
+      console.warn('Failed to delete game folder:', error);
+    }
+
+    // Delete database record last
     await prisma.games.delete({
       where: { id: game_id },
     });
-
-    await FileManager.remove(`game/whack-a-mole/${game_id}`);
   }
 
   static async publishGame(game_id: string, user_id: string, user_role: ROLE) {

@@ -1,1 +1,3 @@
-export * from './whack-a-mole.schema';
+export * from './create.schema';
+export * from './score.schema';
+export * from './update.schema';

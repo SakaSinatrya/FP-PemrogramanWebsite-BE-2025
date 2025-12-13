@@ -25,7 +25,7 @@ import { WhackAMoleService } from './whack-a-mole.service';
 import { WhackAMoleScoreService } from './whack-a-mole-score.service';
 
 export const WhackAMoleController = Router()
-  // 1. CREATE GAME
+  // Create Game
   .post(
     '/',
     validateAuth({}),
@@ -55,7 +55,8 @@ export const WhackAMoleController = Router()
       }
     },
   )
-  // 2. GET PLAY PUBLIC
+
+  // Play Game (Public)
   .get(
     '/:game_id/play/public',
     async (
@@ -80,7 +81,8 @@ export const WhackAMoleController = Router()
       }
     },
   )
-  // 3. GET PLAY PRIVATE
+
+  // Play Game (Private/Preview)
   .get(
     '/:game_id/play',
     validateAuth({}),
@@ -108,9 +110,10 @@ export const WhackAMoleController = Router()
       }
     },
   )
-  // 4. GET DETAIL
-  .get(
-    '/:game_id',
+
+  // Publish Game
+  .post(
+    '/:game_id/publish',
     validateAuth({}),
     async (
       request: AuthedRequest<{ game_id: string }>,
@@ -118,15 +121,15 @@ export const WhackAMoleController = Router()
       next: NextFunction,
     ) => {
       try {
-        const game = await WhackAMoleService.getGameDetail(
+        const publishedGame = await WhackAMoleService.publishGame(
           request.params.game_id,
           request.user!.user_id,
           request.user!.role,
         );
         const result = new SuccessResponse(
           StatusCodes.OK,
-          'Get game successfully',
-          game,
+          'Game published',
+          publishedGame,
         );
 
         return response.status(result.statusCode).json(result.json());
@@ -135,7 +138,93 @@ export const WhackAMoleController = Router()
       }
     },
   )
-  // 5. UPDATE GAME
+
+  // Unpublish Game
+  .post(
+    '/:game_id/unpublish',
+    validateAuth({}),
+    async (
+      request: AuthedRequest<{ game_id: string }>,
+      response: Response,
+      next: NextFunction,
+    ) => {
+      try {
+        const unpublishedGame = await WhackAMoleService.unpublishGame(
+          request.params.game_id,
+          request.user!.user_id,
+          request.user!.role,
+        );
+        const result = new SuccessResponse(
+          StatusCodes.OK,
+          'Game unpublished',
+          unpublishedGame,
+        );
+
+        return response.status(result.statusCode).json(result.json());
+      } catch (error) {
+        next(error);
+      }
+    },
+  )
+
+  // Submit Score
+  .post(
+    '/:game_id/score',
+    validateAuth({}),
+    validateBody({ schema: SaveScoreSchema }),
+    async (
+      request: AuthedRequest<{ game_id: string }, {}, ISaveScore>,
+      response: Response,
+      next: NextFunction,
+    ) => {
+      try {
+        const { score, time_taken, mode } = request.body;
+        const newScore = await WhackAMoleScoreService.saveScore(
+          request.params.game_id,
+          score,
+          request.user!.user_id,
+          time_taken,
+          mode,
+        );
+        const result = new SuccessResponse(
+          StatusCodes.CREATED,
+          'Score saved successfully',
+          newScore,
+        );
+
+        return response.status(result.statusCode).json(result.json());
+      } catch (error) {
+        next(error);
+      }
+    },
+  )
+
+  // Get Leaderboard (Per Game)
+  .get(
+    '/:game_id/leaderboard',
+    async (
+      request: Request<{ game_id: string }>,
+      response: Response,
+      next: NextFunction,
+    ) => {
+      try {
+        const scores = await WhackAMoleScoreService.getTopScores(
+          request.params.game_id,
+        );
+        const result = new SuccessResponse(
+          StatusCodes.OK,
+          'Leaderboard retrieved successfully',
+          scores,
+        );
+
+        return response.status(result.statusCode).json(result.json());
+      } catch (error) {
+        next(error);
+      }
+    },
+  )
+
+  // Update Game
   .patch(
     '/:game_id',
     validateAuth({}),
@@ -167,7 +256,8 @@ export const WhackAMoleController = Router()
       }
     },
   )
-  // 6. DELETE GAME
+
+  // Delete Game
   .delete(
     '/:game_id',
     validateAuth({}),
@@ -193,9 +283,10 @@ export const WhackAMoleController = Router()
       }
     },
   )
-  // 7. PUBLISH GAME
-  .post(
-    '/:game_id/publish',
+
+  // Get Game Detail
+  .get(
+    '/:game_id',
     validateAuth({}),
     async (
       request: AuthedRequest<{ game_id: string }>,
@@ -203,175 +294,20 @@ export const WhackAMoleController = Router()
       next: NextFunction,
     ) => {
       try {
-        const publishedGame = await WhackAMoleService.publishGame(
+        const game = await WhackAMoleService.getGameDetail(
           request.params.game_id,
           request.user!.user_id,
           request.user!.role,
         );
         const result = new SuccessResponse(
           StatusCodes.OK,
-          'Game published',
-          publishedGame,
+          'Get game successfully',
+          game,
         );
 
         return response.status(result.statusCode).json(result.json());
       } catch (error) {
         next(error);
-      }
-    },
-  )
-  // 8. UNPUBLISH GAME
-  .post(
-    '/:game_id/unpublish',
-    validateAuth({}),
-    async (
-      request: AuthedRequest<{ game_id: string }>,
-      response: Response,
-      next: NextFunction,
-    ) => {
-      try {
-        const unpublishedGame = await WhackAMoleService.unpublishGame(
-          request.params.game_id,
-          request.user!.user_id,
-          request.user!.role,
-        );
-        const result = new SuccessResponse(
-          StatusCodes.OK,
-          'Game unpublished',
-          unpublishedGame,
-        );
-
-        return response.status(result.statusCode).json(result.json());
-      } catch (error) {
-        next(error);
-      }
-    },
-  )
-  // 9. SUBMIT SCORE
-  .post(
-    '/:game_id/score',
-    validateAuth({}),
-    validateBody({ schema: SaveScoreSchema }),
-    async (
-      request: AuthedRequest<{ game_id: string }, {}, ISaveScore>,
-      response: Response,
-      next: NextFunction,
-    ) => {
-      try {
-        const { score, time_taken, mode } = request.body;
-        const newScore = await WhackAMoleScoreService.saveScore(
-          request.params.game_id,
-          score,
-          request.user!.user_id,
-          time_taken,
-          mode,
-        );
-        const result = new SuccessResponse(
-          StatusCodes.CREATED,
-          'Score saved successfully',
-          newScore,
-        );
-
-        return response.status(result.statusCode).json(result.json());
-      } catch (error) {
-        next(error);
-      }
-    },
-  )
-  // 10. LEADERBOARD
-  .get(
-    '/:game_id/leaderboard',
-    async (
-      request: Request<{ game_id: string }>,
-      response: Response,
-      next: NextFunction,
-    ) => {
-      try {
-        const scores = await WhackAMoleScoreService.getTopScores(
-          request.params.game_id,
-        );
-        const result = new SuccessResponse(
-          StatusCodes.OK,
-          'Leaderboard retrieved successfully',
-          scores,
-        );
-
-        return response.status(result.statusCode).json(result.json());
-      } catch (error) {
-        next(error);
-      }
-    },
-  )
-  .post(
-    '/:game_id/score',
-    validateBody({ schema: SaveScoreSchema }),
-    async (
-      request: Request<{ game_id: string }, {}, ISaveScore>,
-      response: Response,
-      next: NextFunction,
-    ) => {
-      try {
-        // Check if user is authenticated (optional)
-        const userId = (request as AuthedRequest).user?.user_id;
-
-        const newScore = await WhackAMoleScoreService.saveScore(
-          request.params.game_id,
-          request.body.score,
-          userId,
-          request.body.time_taken,
-        );
-
-        const result = new SuccessResponse(
-          StatusCodes.CREATED,
-          'Score saved successfully',
-          newScore,
-        );
-
-        return response.status(result.statusCode).json(result.json());
-      } catch (error) {
-        return next(error);
-      }
-    },
-  )
-  .get(
-    '/:game_id/leaderboard',
-    async (
-      request: Request<{ game_id: string }>,
-      response: Response,
-      next: NextFunction,
-    ) => {
-      try {
-        const scores = await WhackAMoleScoreService.getTopScores(
-          request.params.game_id,
-        );
-
-        const result = new SuccessResponse(
-          StatusCodes.OK,
-          'Top scores retrieved successfully',
-          scores,
-        );
-
-        return response.status(result.statusCode).json(result.json());
-      } catch (error) {
-        return next(error);
-      }
-    },
-  )
-  .get(
-    '/leaderboard/global',
-    async (request: Request, response: Response, next: NextFunction) => {
-      try {
-        const scores = await WhackAMoleScoreService.getGlobalTopScores();
-
-        const result = new SuccessResponse(
-          StatusCodes.OK,
-          'Global top scores retrieved successfully',
-          scores,
-        );
-
-        return response.status(result.statusCode).json(result.json());
-      } catch (error) {
-        return next(error);
       }
     },
   );

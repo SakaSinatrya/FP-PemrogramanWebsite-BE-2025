@@ -48,6 +48,12 @@ export abstract class WhackAMoleScoreService {
       throw new ErrorResponse(StatusCodes.NOT_FOUND, 'Game not found');
     }
 
+    // Increment total played when game is actually completed
+    await prisma.games.update({
+      where: { id: game_id },
+      data: { total_played: { increment: 1 } },
+    });
+
     // Create leaderboard entry
     const newScore = await prisma.leaderboard.create({
       data: {

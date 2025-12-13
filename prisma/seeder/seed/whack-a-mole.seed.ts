@@ -42,9 +42,9 @@ export const whackAMoleSeed = async () => {
         game_json: {
           title: 'Demo Whack-a-Mole',
           description: 'Hit as many moles as you can!',
-          timeLimit: 60,
-          moleCount: 9,
-          moleSpeed: 1000,
+          time_limit: 60,
+          mole_count: 9,
+          mole_speed: 1000,
         },
         total_played: 0,
       },

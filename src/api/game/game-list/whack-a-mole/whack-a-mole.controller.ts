@@ -52,32 +52,6 @@ export const WhackAMoleController = Router()
     },
   )
   .get(
-    '/:game_id',
-    validateAuth({}),
-    async (
-      request: AuthedRequest<{ game_id: string }>,
-      response: Response,
-      next: NextFunction,
-    ) => {
-      try {
-        const game = await WhackAMoleService.getGameDetail(
-          request.params.game_id,
-          request.user!.user_id,
-          request.user!.role,
-        );
-        const result = new SuccessResponse(
-          StatusCodes.OK,
-          'Get game successfully',
-          game,
-        );
-
-        return response.status(result.statusCode).json(result.json());
-      } catch (error) {
-        return next(error);
-      }
-    },
-  )
-  .get(
     '/:game_id/play/public',
     async (
       request: Request<{ game_id: string }>,
@@ -113,6 +87,32 @@ export const WhackAMoleController = Router()
         const game = await WhackAMoleService.getGamePlay(
           request.params.game_id,
           false,
+          request.user!.user_id,
+          request.user!.role,
+        );
+        const result = new SuccessResponse(
+          StatusCodes.OK,
+          'Get game successfully',
+          game,
+        );
+
+        return response.status(result.statusCode).json(result.json());
+      } catch (error) {
+        return next(error);
+      }
+    },
+  )
+  .get(
+    '/:game_id',
+    validateAuth({}),
+    async (
+      request: AuthedRequest<{ game_id: string }>,
+      response: Response,
+      next: NextFunction,
+    ) => {
+      try {
+        const game = await WhackAMoleService.getGameDetail(
+          request.params.game_id,
           request.user!.user_id,
           request.user!.role,
         );
@@ -176,58 +176,6 @@ export const WhackAMoleController = Router()
         const result = new SuccessResponse(
           StatusCodes.OK,
           'Game deleted successfully',
-        );
-
-        return response.status(result.statusCode).json(result.json());
-      } catch (error) {
-        return next(error);
-      }
-    },
-  )
-  .post(
-    '/:game_id/publish',
-    validateAuth({}),
-    async (
-      request: AuthedRequest<{ game_id: string }>,
-      response: Response,
-      next: NextFunction,
-    ) => {
-      try {
-        const publishedGame = await WhackAMoleService.publishGame(
-          request.params.game_id,
-          request.user!.user_id,
-          request.user!.role,
-        );
-        const result = new SuccessResponse(
-          StatusCodes.OK,
-          'Game published successfully',
-          publishedGame,
-        );
-
-        return response.status(result.statusCode).json(result.json());
-      } catch (error) {
-        return next(error);
-      }
-    },
-  )
-  .post(
-    '/:game_id/unpublish',
-    validateAuth({}),
-    async (
-      request: AuthedRequest<{ game_id: string }>,
-      response: Response,
-      next: NextFunction,
-    ) => {
-      try {
-        const unpublishedGame = await WhackAMoleService.unpublishGame(
-          request.params.game_id,
-          request.user!.user_id,
-          request.user!.role,
-        );
-        const result = new SuccessResponse(
-          StatusCodes.OK,
-          'Game unpublished successfully',
-          unpublishedGame,
         );
 
         return response.status(result.statusCode).json(result.json());

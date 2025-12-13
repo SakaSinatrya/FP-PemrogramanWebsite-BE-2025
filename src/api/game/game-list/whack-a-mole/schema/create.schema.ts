@@ -11,10 +11,8 @@ export const CreateWhackAMoleSchema = z.object({
   description: z.string().max(256).trim().optional(),
   thumbnail_image: fileSchema({}),
   is_publish_immediately: StringToBooleanSchema.default(false),
-  // Optional game settings for future expansion
-  time_limit: z.number().int().positive().default(30).optional(),
-  speed_increment: z.number().int().positive().default(20).optional(),
-  min_speed: z.number().int().positive().default(400).optional(),
+  // Optional game setting - defaults to 30 seconds
+  time_limit: z.coerce.number().int().positive().default(30),
 });
 
 export type ICreateWhackAMole = z.infer<typeof CreateWhackAMoleSchema>;

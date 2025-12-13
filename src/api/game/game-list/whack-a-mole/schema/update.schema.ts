@@ -10,10 +10,8 @@ export const UpdateWhackAMoleSchema = z.object({
   description: z.string().max(256).trim().optional(),
   thumbnail_image: fileSchema({}).optional(),
   is_published: StringToBooleanSchema.optional(),
-  // Optional game settings
-  time_limit: z.number().int().positive().optional(),
-  speed_increment: z.number().int().positive().optional(),
-  min_speed: z.number().int().positive().optional(),
+  // Optional game setting
+  time_limit: z.coerce.number().int().positive().optional(),
 });
 
 export type IUpdateWhackAMole = z.infer<typeof UpdateWhackAMoleSchema>;

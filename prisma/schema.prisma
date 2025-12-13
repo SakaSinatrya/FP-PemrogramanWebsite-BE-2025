@@ -103,11 +103,3 @@ model Leaderboard {
   @@index([game_id, score])
   @@index([user_id])
 }
-
-model WhackARoboScore {
-  id         String   @id @default(uuid())
-  score      Int
-  created_at DateTime @default(now())
-  
-  @@index([score])
-}

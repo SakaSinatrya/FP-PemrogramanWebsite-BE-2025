@@ -129,6 +129,12 @@ export abstract class WhackAMoleService {
     if (!gameJson)
       throw new ErrorResponse(StatusCodes.NOT_FOUND, 'Game data not found');
 
+    // Increment total played
+    await prisma.games.update({
+      where: { id: game_id },
+      data: { total_played: { increment: 1 } },
+    });
+
     return {
       id: game.id,
       name: game.name,
@@ -246,6 +252,64 @@ export abstract class WhackAMoleService {
     await prisma.games.delete({
       where: { id: game_id },
     });
+  }
+
+  static async publishGame(game_id: string, user_id: string, user_role: ROLE) {
+    const game = await prisma.games.findUnique({
+      where: { id: game_id },
+      select: {
+        creator_id: true,
+        game_template: { select: { slug: true } },
+      },
+    });
+
+    if (!game || game.game_template.slug !== this.GAME_SLUG)
+      throw new ErrorResponse(StatusCodes.NOT_FOUND, 'Game not found');
+
+    if (user_role !== 'SUPER_ADMIN' && game.creator_id !== user_id)
+      throw new ErrorResponse(
+        StatusCodes.FORBIDDEN,
+        'User cannot publish this game',
+      );
+
+    const publishedGame = await prisma.games.update({
+      where: { id: game_id },
+      data: { is_published: true },
+      select: { id: true },
+    });
+
+    return publishedGame;
+  }
+
+  static async unpublishGame(
+    game_id: string,
+    user_id: string,
+    user_role: ROLE,
+  ) {
+    const game = await prisma.games.findUnique({
+      where: { id: game_id },
+      select: {
+        creator_id: true,
+        game_template: { select: { slug: true } },
+      },
+    });
+
+    if (!game || game.game_template.slug !== this.GAME_SLUG)
+      throw new ErrorResponse(StatusCodes.NOT_FOUND, 'Game not found');
+
+    if (user_role !== 'SUPER_ADMIN' && game.creator_id !== user_id)
+      throw new ErrorResponse(
+        StatusCodes.FORBIDDEN,
+        'User cannot unpublish this game',
+      );
+
+    const unpublishedGame = await prisma.games.update({
+      where: { id: game_id },
+      data: { is_published: false },
+      select: { id: true },
+    });
+
+    return unpublishedGame;
   }
 
   private static async existGameCheck(gameName: string) {

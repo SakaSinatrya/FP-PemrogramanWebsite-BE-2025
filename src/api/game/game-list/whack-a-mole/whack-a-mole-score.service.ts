@@ -37,6 +37,7 @@ export abstract class WhackAMoleScoreService {
     score: number,
     user_id?: string,
     time_taken?: number,
+    mode?: 'normal' | 'nightmare',
   ) {
     // Verify game exists
     const game = await prisma.games.findUnique({
@@ -48,7 +49,7 @@ export abstract class WhackAMoleScoreService {
       throw new ErrorResponse(StatusCodes.NOT_FOUND, 'Game not found');
     }
 
-    // Increment total played when game is actually completed
+    // Increment total played
     await prisma.games.update({
       where: { id: game_id },
       data: { total_played: { increment: 1 } },
@@ -70,7 +71,10 @@ export abstract class WhackAMoleScoreService {
       },
     });
 
-    return newScore;
+    return {
+      ...newScore,
+      mode: mode || 'normal',
+    };
   }
 
   /**

@@ -16,10 +16,13 @@ import {
 import {
   CreateWhackAMoleSchema,
   type ICreateWhackAMole,
+  type ISaveScore,
   type IUpdateWhackAMole,
+  SaveScoreSchema,
   UpdateWhackAMoleSchema,
 } from './schema';
 import { WhackAMoleService } from './whack-a-mole.service';
+import { WhackAMoleScoreService } from './whack-a-mole-score.service';
 
 export const WhackAMoleController = Router()
   .post(
@@ -176,6 +179,79 @@ export const WhackAMoleController = Router()
         const result = new SuccessResponse(
           StatusCodes.OK,
           'Game deleted successfully',
+        );
+
+        return response.status(result.statusCode).json(result.json());
+      } catch (error) {
+        return next(error);
+      }
+    },
+  )
+  .post(
+    '/:game_id/score',
+    validateBody({ schema: SaveScoreSchema }),
+    async (
+      request: Request<{ game_id: string }, {}, ISaveScore>,
+      response: Response,
+      next: NextFunction,
+    ) => {
+      try {
+        // Check if user is authenticated (optional)
+        const userId = (request as AuthedRequest).user?.user_id;
+
+        const newScore = await WhackAMoleScoreService.saveScore(
+          request.params.game_id,
+          request.body.score,
+          userId,
+          request.body.time_taken,
+        );
+
+        const result = new SuccessResponse(
+          StatusCodes.CREATED,
+          'Score saved successfully',
+          newScore,
+        );
+
+        return response.status(result.statusCode).json(result.json());
+      } catch (error) {
+        return next(error);
+      }
+    },
+  )
+  .get(
+    '/:game_id/leaderboard',
+    async (
+      request: Request<{ game_id: string }>,
+      response: Response,
+      next: NextFunction,
+    ) => {
+      try {
+        const scores = await WhackAMoleScoreService.getTopScores(
+          request.params.game_id,
+        );
+
+        const result = new SuccessResponse(
+          StatusCodes.OK,
+          'Top scores retrieved successfully',
+          scores,
+        );
+
+        return response.status(result.statusCode).json(result.json());
+      } catch (error) {
+        return next(error);
+      }
+    },
+  )
+  .get(
+    '/leaderboard/global',
+    async (request: Request, response: Response, next: NextFunction) => {
+      try {
+        const scores = await WhackAMoleScoreService.getGlobalTopScores();
+
+        const result = new SuccessResponse(
+          StatusCodes.OK,
+          'Global top scores retrieved successfully',
+          scores,
         );
 
         return response.status(result.statusCode).json(result.json());
